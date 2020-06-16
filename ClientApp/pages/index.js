@@ -14,6 +14,10 @@ const App = () => {
     const handleAxis = (axis, value, lastValue) => {
         socket.emit('axis', {'axis': axis, 'value': value})
     }
+    const testSend = () => socket.emit('test', {
+        'data': "test",
+        'value': "test"
+    })
     return (
         <div>
             <Gamepad 
@@ -23,6 +27,7 @@ const App = () => {
             >
                 <></>
             </Gamepad>
+            <button onClick={testSend}>Test send</button>
         </div>
     )
 }

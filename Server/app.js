@@ -10,6 +10,11 @@ var usersRouter = require('./routes/users');
 var app = express();
 const { Client } = require('node-osc');
 
+const dgram = require('dgram');
+const osc = dgram.createSocket('udp4');
+const target_ip = "192.168.86.66"
+const target_port = 9000;
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -67,6 +72,16 @@ io.on('connection', socket => {
         const pressed = data.pressed;
         client.send(`/${button}`, pressed, ()=>console.log(`${button} ${pressed ? "pressed" : "released"}`))
     });
+
+    socket.on('test', data => {
+      const header = Buffer.from("/dreams\0\,m\0\0"); //dreams address with ,m midi type tag string and null characters
+      const midi = Buffer.from([0x00, 0x90, 0x3c, 0x7f]); //port ID 0, noteon message, C4, 127 velocity
+      const bufferArray = [header, midi]; //
+      const packet = Buffer.concat(bufferArray);
+      console.debug(packet);
+      osc.send(packet, 0, packet.length, target_port, target_ip, () => {});
+      
+    })
 });
 
 server.listen(port);
