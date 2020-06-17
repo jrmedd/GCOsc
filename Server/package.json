@@ -12,8 +12,6 @@
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
     "morgan": "~1.9.1",
-    "node-osc": "^5.1.0",
-    "socket.io": "^2.3.0",
-    "osc": "2.4.1"
+    "socket.io": "^2.3.0"
   }
 }

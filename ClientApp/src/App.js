@@ -28,29 +28,33 @@ const notes = Object.keys(midiNotes).sort();
 
 const modes = ['ionian', 'dorian', 'phrygian', 'lydian', 'mixolyidan', 'aeolian', 'lochrian'];
 
+let buttons = ["A", "B", "X", "Y", "DPadLeft", "DPadUp", "DPadRight", "DPadDown", "Start", "Back"];
+
+const setScale = (key, octave, mode, buttonsAssignment) => {
+  let scaleOctave = octave;
+  let scaleIndex = notes.indexOf(key);
+  const scale = {};
+  for (let i = 0; i < 8; i++) {
+    scaleOctave = octave + Math.floor((scaleIndex) / 12);
+    scale[buttonsAssignment[i]] = midiNotes[notes[scaleIndex % 12]] + (scaleOctave * 12);
+    scaleIndex += diatonicScale[(i + modes.indexOf(mode)) % 7];
+  }
+  return scale;
+}
+
 const App = () => {
-  const [noteAssignments, setNoteAssignments] = React.useState({});
-  const [octave, setOctave] = React.useState(0);
+  const [octave, setOctave] = React.useState(3);
   const [key, setKey] = React.useState('C');
+  const [mode, setMode] = React.useState('ionian');
+  const [noteAssignments, setNoteAssignments] = React.useState(setScale(key, octave, mode, buttons));
   const handleConnect = e => socket.emit('controller-connection', { 
     'controllerConnected': true 
   });
   const handleDisconnect = e => socket.emit('controller-connection', {
     'controllerConnected': false
   });
-  const setScale = (key, octave, mode) => {
-    let scaleOctave = octave;
-    let scaleIndex = notes.indexOf(key);
-    const scale = [];
-    for (let i = 0; i < 8; i ++) {
-      scaleOctave = octave+Math.floor((scaleIndex)/12);
-      scale[i] = midiNotes[notes[scaleIndex%12]]+(scaleOctave*12);
-      scaleIndex += diatonicScale[(i+modes.indexOf(mode))%7];
-    }
-    return scale;
-  }
   const handleButton = (button, change) => {
-    socket.emit('button', { 'button': button, 'pressed': change ? 1 : 0 })
+    socket.emit('button', { 'button': noteAssignments[button] || button, 'pressed': change ? 1 : 0 })
   };
   const handleAxis = (axis, value, lastValue) => {
     socket.emit('axis', { 'axis': axis, 'value': value })

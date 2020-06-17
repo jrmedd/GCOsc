@@ -8,12 +8,8 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
 var app = express();
-const { Client } = require('node-osc');
 
-const dgram = require('dgram');
-const osc = dgram.createSocket('udp4');
-const target_ip = "192.168.86.66"
-const target_port = 9000;
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -44,11 +40,38 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-const client = new Client('192.168.86.66', 8000);
 
 const port = 3011;
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
+
+const dgram = require('dgram');
+const osc = dgram.createSocket('udp4');
+const target_ip = "192.168.86.99"
+const target_port = 9000;
+
+const midiAxes = {
+  'LeftStickX': ['control', 0x01], // "Spicy" CC for Dreams
+  'LeftStickY': ['pitch', 0x00], //pitch bend (LSBs so leave 0)
+  'RightStickX': ['control', 0x0C], // X CC for Dreams
+  'RightStickY': ['control', 0x0D], // Y CC for Dreams
+}
+
+
+const midiToOsc = (portid, type, number, value) => {
+  const types = {
+    'noteOn': 0x90,
+    'noteOff': 0x80,
+    'control': 0xB0,
+    'pitch': 0xE0
+  };
+  const header = Buffer.from("/dreams\0\,m\0\0");
+  const midi = Buffer.from([portid, types[type], number, value]);
+  const bufferArray = [header, midi]; //
+  const packet = Buffer.concat(bufferArray);
+  console.debug(packet);
+  osc.send(packet, 0, packet.length, target_port, target_ip, (e) => {console.debug(e)});
+}
 
 io.on('connection', socket => {
     console.log('a user connected');
@@ -62,15 +85,16 @@ io.on('connection', socket => {
     });
 
     socket.on('axis', data=> {
-      const axis = data.axis;
+      const midiControlType = midiAxes[data.axis][0];
+      const midiControlNumber = midiAxes[data.axis][1];
       const value = data.value;
-      client.send(`/${axis}`, value, ()=>console.log(`${axis} – ${value}`));
+      midiToOsc(0x00, midiControlType, midiControlNumber, value);
     })
 
     socket.on('button', data => {
-        const button = data.button;
-        const pressed = data.pressed;
-        client.send(`/${button}`, pressed, ()=>console.log(`${button} ${pressed ? "pressed" : "released"}`))
+        const note = data.button;
+        const state = data.pressed ? 'noteOn' : 'noteOff';
+        midiToOsc(0x00, state, note, 64);
     });
 
     socket.on('test', data => {
@@ -83,6 +107,7 @@ io.on('connection', socket => {
       
     })
 });
+
 
 server.listen(port);
 
