@@ -1,6 +1,8 @@
 import React from "react"
 import io from 'socket.io-client';
 import Gamepad from "react-gamepad"
+import { ControllerSVG } from "./ControllerSVG";
+import './App.css'
 
 const socket = io('http://localhost:3011');
 
@@ -36,15 +38,17 @@ const setScale = (key, octave, mode, buttonsAssignment) => {
   const scale = {};
   for (let i = 0; i < 8; i++) {
     scaleOctave = octave + Math.floor((scaleIndex) / 12);
-    scale[buttonsAssignment[i]] = midiNotes[notes[scaleIndex % 12]] + (scaleOctave * 12);
+    let note = notes[scaleIndex % 12];
+    scale[buttonsAssignment[i]] = [midiNotes[note] + (scaleOctave * 12), `${note}${scaleOctave}`];
     scaleIndex += diatonicScale[(i + modes.indexOf(mode)) % 7];
   }
   return scale;
 }
 
 const App = () => {
+  const [pressed, setPressed] = React.useState(false)
   const [octave, setOctave] = React.useState(3);
-  const [key, setKey] = React.useState('C');
+  const [key, setKey] = React.useState('C#');
   const [mode, setMode] = React.useState('ionian');
   const [noteAssignments, setNoteAssignments] = React.useState(setScale(key, octave, mode, buttons));
   const handleConnect = e => socket.emit('controller-connection', { 
@@ -54,7 +58,8 @@ const App = () => {
     'controllerConnected': false
   });
   const handleButton = (button, change) => {
-    socket.emit('button', { 'button': noteAssignments[button] || button, 'pressed': change ? 1 : 0 })
+    setPressed(change);
+    socket.emit('button', { 'button': noteAssignments[button][0] || button, 'pressed': change ? 1 : 0 })
   };
   const handleAxis = (axis, value, lastValue) => {
     socket.emit('axis', { 'axis': axis, 'value': value })
@@ -72,7 +77,7 @@ const App = () => {
       >
         <></>
       </Gamepad>
-      <button onClick={testSend}>Test send</button>
+      <ControllerSVG assignments={noteAssignments} width="50%" pressed={pressed} />
     </div>
   )
 }
