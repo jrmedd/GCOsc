@@ -2,6 +2,7 @@ import React from "react"
 import io from 'socket.io-client';
 import Gamepad from "react-gamepad"
 import { ControllerSVG } from "./ControllerSVG";
+import styled, { css } from "styled-components";
 import './App.css'
 
 const socket = io('http://localhost:3011');
@@ -45,8 +46,17 @@ const setScale = (key, octave, mode, buttonsAssignment) => {
   return scale;
 }
 
+const Main = styled.main((props)=>css`
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+`)
+
 const App = () => {
-  const [pressed, setPressed] = React.useState(false)
+  const [pressed, setPressed] = React.useState([])
+  const [axes, setAxes] = React.useState({'LeftStickX':1,'LeftStickY':1,'RightStickX':1,'RightStickY':1})
   const [octave, setOctave] = React.useState(3);
   const [key, setKey] = React.useState('C#');
   const [mode, setMode] = React.useState('ionian');
@@ -58,18 +68,17 @@ const App = () => {
     'controllerConnected': false
   });
   const handleButton = (button, change) => {
-    setPressed(change);
-    socket.emit('button', { 'button': noteAssignments[button][0] || button, 'pressed': change ? 1 : 0 })
+    setPressed(change ? [...pressed, button] : pressed.filter(v=> v!=button));
+    socket.emit('button', { 'button': noteAssignments[button] ? noteAssignments[button][0] : null || button, 'pressed': change ? 1 : 0 })
   };
   const handleAxis = (axis, value, lastValue) => {
+    const axisUpdate = {};
+    axisUpdate[axis] = value;
+    setAxes({...axes, ...axisUpdate})
     socket.emit('axis', { 'axis': axis, 'value': value })
   }
-  const testSend = () => socket.emit('test', {
-    'data': "test",
-    'value': "test"
-  })
   return (
-    <div>
+    <Main>
       <Gamepad
         onConnect={handleConnect}
         onButtonChange={handleButton}
@@ -77,8 +86,12 @@ const App = () => {
       >
         <></>
       </Gamepad>
-      <ControllerSVG assignments={noteAssignments} width="50%" pressed={pressed} />
-    </div>
+      <ControllerSVG 
+        width="50%"
+        axes={axes} 
+        assignments={noteAssignments} 
+        pressed={pressed} />
+    </Main>
   )
 }
 
