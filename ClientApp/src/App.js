@@ -52,6 +52,7 @@ const Main = styled.main((props)=>css`
   height: 100vh;
   justify-content: center;
   align-items: center;
+  background: #272822;
 `)
 
 const App = () => {
