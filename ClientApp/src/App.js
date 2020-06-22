@@ -56,18 +56,13 @@ const Main = styled.main((props)=>css`
 `)
 
 const App = () => {
+  const [connected, setConnected] = React.useState(false)
   const [pressed, setPressed] = React.useState([])
-  const [axes, setAxes] = React.useState({'LeftStickX':1,'LeftStickY':1,'RightStickX':1,'RightStickY':1})
+  const [axes, setAxes] = React.useState({'LeftStickX':0,'LeftStickY':0,'RightStickX':0,'RightStickY':0})
   const [octave, setOctave] = React.useState(3);
   const [key, setKey] = React.useState('C#');
   const [mode, setMode] = React.useState('ionian');
   const [noteAssignments, setNoteAssignments] = React.useState(setScale(key, octave, mode, buttons));
-  const handleConnect = e => socket.emit('controller-connection', { 
-    'controllerConnected': true 
-  });
-  const handleDisconnect = e => socket.emit('controller-connection', {
-    'controllerConnected': false
-  });
   const handleButton = (button, change) => {
     setPressed(change ? [...pressed, button] : pressed.filter(v=> v!=button));
     socket.emit('button', { 'button': noteAssignments[button] ? noteAssignments[button][0] : null || button, 'pressed': change ? 1 : 0 })
@@ -81,7 +76,8 @@ const App = () => {
   return (
     <Main>
       <Gamepad
-        onConnect={handleConnect}
+        onConnect={() => setConnected(true)}
+        onDisconnect={()=>setConnected(false)}
         onButtonChange={handleButton}
         onAxisChange={handleAxis}
       >
@@ -89,6 +85,7 @@ const App = () => {
       </Gamepad>
       <ControllerSVG 
         width="50%"
+        connected={connected}
         axes={axes} 
         assignments={noteAssignments} 
         pressed={pressed} />
