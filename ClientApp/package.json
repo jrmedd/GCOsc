@@ -8,9 +8,10 @@
     "@testing-library/user-event": "^7.1.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.1",
     "react-gamepad": "github:SBRK/react-gamepad",
-    "socket.io-client": "^2.3.0"
+    "react-scripts": "3.4.1",
+    "socket.io-client": "^2.3.0",
+    "websocket-extensions": "^0.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
