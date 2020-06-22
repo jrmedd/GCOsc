@@ -60,12 +60,37 @@ const App = () => {
   const [pressed, setPressed] = React.useState([])
   const [axes, setAxes] = React.useState({'LeftStickX':0,'LeftStickY':0,'RightStickX':0,'RightStickY':0})
   const [octave, setOctave] = React.useState(3);
-  const [key, setKey] = React.useState('C#');
+  const [key, setKey] = React.useState('C');
   const [mode, setMode] = React.useState('ionian');
   const [noteAssignments, setNoteAssignments] = React.useState(setScale(key, octave, mode, buttons));
+
   const handleButton = (button, change) => {
     setPressed(change ? [...pressed, button] : pressed.filter(v=> v!=button));
-    socket.emit('button', { 'button': noteAssignments[button] ? noteAssignments[button][0] : null || button, 'pressed': change ? 1 : 0 })
+    socket.emit('button', { 'button': noteAssignments[button] ? noteAssignments[button][0] : null || button, 'pressed': change ? 1 : 0 });
+    const modeIndex = modes.indexOf(mode);
+    const keyIndex = notes.indexOf(key);
+    if (button == "RB" && change) {
+      if (pressed.includes("Start")){
+        setMode(modes[(modeIndex+1) % modes.length]);
+      }
+      else if (pressed.includes("Back")) {
+        setKey(notes[(keyIndex + 1) % notes.length]);
+      }
+      else {
+        setOctave((octave + 1) % 9);
+      }
+    }
+    else if (button =="LB" && change) {
+      if (pressed.includes("Start")) {
+        setMode(modeIndex == 0 ? modes[modes.length - 1] : modes[modeIndex - 1]);
+      }
+      else if (pressed.includes("Back")) {
+        setKey(keyIndex == 0 ? notes[notes.length - 1] : notes[keyIndex - 1]);
+      }
+      else {
+        setOctave(octave == 0 ? 8 : octave - 1);
+      }
+    }
   };
   const handleAxis = (axis, value, lastValue) => {
     const axisUpdate = {};
@@ -73,6 +98,9 @@ const App = () => {
     setAxes({...axes, ...axisUpdate})
     socket.emit('axis', { 'axis': axis, 'value': value })
   }
+  React.useEffect(()=> {
+    setNoteAssignments(setScale(key, octave, mode, buttons));
+  }, [key, octave, mode])
   return (
     <Main>
       <Gamepad
@@ -88,7 +116,9 @@ const App = () => {
         connected={connected}
         axes={axes} 
         assignments={noteAssignments} 
-        pressed={pressed} />
+        pressed={pressed} 
+        mode={mode}
+        />
     </Main>
   )
 }

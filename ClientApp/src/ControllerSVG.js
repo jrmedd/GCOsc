@@ -25,7 +25,6 @@ const NoteWrapper = styled.foreignObject((props)=>css`
     opacity: ${ props.visible ? 1 : 0};
     transition: opacity 1s ease;
 `)
-
 const NoteText = styled.span((props)=>css`
     text-align:${props.alignment || "center"};
     color: ${props.pressed ? "#272822" : "#F8F8F2"};
@@ -35,7 +34,6 @@ const NoteText = styled.span((props)=>css`
     font-family: 'Coda';
     transition: color .25s ease;
 `)
-
 const Analog = styled.circle((props)=>css`
     fill: ${!props.moving ? props.fill || '#F8F8F2':'rgba(0,0,0,0)'};
     stroke: ${props.stroke || "#F8F8F2"};
@@ -127,6 +125,7 @@ export const ControllerSVG = (props) => {
         <NoteDisplay visible={notesVisible} pressed={pressed.indexOf('DPadUp') >= 0} x={295} y={358} width={80} height={40}>{assignments.DPadUp[1]}</NoteDisplay>
         <NoteDisplay visible={notesVisible} pressed={pressed.indexOf('DPadRight') >= 0} alignment="left" x={403} y={440} width={80} height={40}>{assignments.DPadRight[1]}</NoteDisplay>
         <NoteDisplay visible={notesVisible} pressed={pressed.indexOf('DPadDown') >= 0} x={296} y={518} width={80} height={40}>{assignments.DPadDown[1]}</NoteDisplay>
+        <NoteDisplay visible={notesVisible} pressed={pressed.indexOf("Start") < 0} x={436} y={180} width={128} height={40}>{ props.mode }</NoteDisplay>
         </svg>
     )
 }
